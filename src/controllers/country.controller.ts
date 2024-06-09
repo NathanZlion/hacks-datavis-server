@@ -4,7 +4,8 @@ import country from '../models/country.model';
 
 interface countryStatInterface {
     countryName: string;
-    numberOfParticipants: number;
+    numberOfIndividualParticipants?: number;
+    numberOfGroupParticipants?: number;
 }
 
 /**
@@ -34,11 +35,32 @@ export class countryController {
     static async overwriteCountriesStat (req: Request, res: Response) {
         try {
             const countriesStat = req.body.data as countryStatInterface[];
-            await country.deleteMany();
+            // await country.deleteMany();
 
             countriesStat.forEach(async (countryStat) => {
-                await new country(countryStat).save();
+                // await new country(countryStat).save();
+
+                // check if the country already exists
+                const countryExists = await country.findOne({ countryName: countryStat.countryName }) as any;
+
+                if (!countryExists) {
+                    console.log("Here I am, creating a new country!" + countryStat.countryName );
+                    await new country(countryStat).save();
+                    return;
+                }
+
+                // check if this overwrite is from individual registration or not.
+                await countryExists.save();
+                if (countryStat.numberOfIndividualParticipants) {
+                    countryExists.numberOfIndividualParticipants = countryStat.numberOfIndividualParticipants;
+                } else if (countryStat.numberOfGroupParticipants) {
+                    countryExists.numberOfGroupParticipants = countryStat.numberOfGroupParticipants;
+                }
+
+                // save changes
+                await countryExists.save();
             });
+
 
             res.status(200)
                 .json({
