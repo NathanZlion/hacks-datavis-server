@@ -26,7 +26,7 @@ export class participantControllers {
             const { countryName, reachoutSource } = req.body as individualRegistrationInterface;
     
             // update country and reachoutSource
-            await participantControllers.increaseCountrySourceCount(countryName);
+            await participantControllers.increaseCountrySourceCount(countryName, 1, true);
     
             // update the reachoutSource
             await participantControllers.addOnereachoutSource(reachoutSource);
@@ -47,7 +47,7 @@ export class participantControllers {
             const { countryName, reachoutsource, groupSize } = req.body as groupRegistrationInterface;
 
             // update country and reachoutSource
-            await participantControllers.increaseCountrySourceCount(countryName, groupSize);
+            await participantControllers.increaseCountrySourceCount(countryName, groupSize, false);
     
             // update the reachoutSource
             await participantControllers.addOnereachoutSource(reachoutsource, groupSize);
@@ -63,7 +63,7 @@ export class participantControllers {
         }
     }
     
-    static async increaseCountrySourceCount(countryName: string, increment: number = 1) {
+    static async increaseCountrySourceCount(countryName: string, increment: number = 1, individual: boolean = true) {
         // find the country
         const existingCountry = await country.findOne({ countryName: countryName });
 
@@ -74,7 +74,11 @@ export class participantControllers {
         }
 
         // update the country count
-        existingCountry.numberOfParticipants += increment;
+        if (individual) {
+            existingCountry.numberOfIndividualParticipants += increment;
+        } else {
+            existingCountry.numberOfGroupParticipants += increment;
+        }
         
         // save the updated country
         await existingCountry.save();
