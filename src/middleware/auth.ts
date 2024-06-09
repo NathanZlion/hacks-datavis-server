@@ -1,7 +1,5 @@
 
-import jwt from 'jsonwebtoken';
 import { Response, Request, NextFunction } from "express";
-import { Types } from 'mongoose';
 
 const authorization = async (req: Request, res: Response, next: NextFunction) => {
     try {

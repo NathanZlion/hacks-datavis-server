@@ -8,7 +8,7 @@ const participantRouter = express.Router();
 
 participantRouter.use(authMiddleware);
 
-participantRouter.post("/new/individual", participantControllers.newIndividualRegistration);
-participantRouter.post("/new/group", participantControllers.newGroupRegistration);
+participantRouter.post("/new/individual", authMiddleware, participantControllers.newIndividualRegistration);
+participantRouter.post("/new/group", authMiddleware, participantControllers.newGroupRegistration);
 
 export default participantRouter;
