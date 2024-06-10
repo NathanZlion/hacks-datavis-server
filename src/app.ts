@@ -31,7 +31,8 @@ const base_api = '/api/v'+version;
 // ROUTES
 
 // test route
-app.get(base_api+"/ping", (_: Request, res: Response) => {
+app.get(base_api+"/ping", (req: Request, res: Response) => {
+    console.log(req.ip);
     res.json({ 
         status: "success",
         message: "pong",

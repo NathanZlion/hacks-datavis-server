@@ -1,8 +1,8 @@
 {
   "name": "super_secret_hackathon_project_backend",
   "version": "1.0.0",
-  "description": "InfoBlend",
-  "main": "app.js",
+  "description": "Hacks Datavis Server",
+  "main": "dist/app.js",
   "scripts": {
     "start": "node ./dist/app.js",
     "build": "tsc",
