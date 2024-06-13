@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import summary from '../models/summary.model';
+import country from '../models/country.model';
 
 
 /**
@@ -19,11 +20,21 @@ export class SummaryController {
                 res.status(400).json({ message: "Summary not found!" });
                 return;
             }
+            
+            const individualParticipants = storedSummary.individualParticipants;
+            const numberofTeams = storedSummary.groupParticipants;
+            const averageGroupSize = storedSummary.averageGroupSize;
+            const totalParticipants = Math.round(numberofTeams * averageGroupSize) + individualParticipants;
 
             res.status(200)
                 .json({
                     message: "success",
-                    data: storedSummary,
+                    data: {
+                        "totalParticipants": totalParticipants,
+                        "individualParticipants": individualParticipants,
+                        "groupParticipants": numberofTeams,
+                        "countryCount": await country.countDocuments(),
+                    },
                 });
         }
         catch (error) {
@@ -41,30 +52,22 @@ export class SummaryController {
     */
     static async writeSummary (req: Request, res: Response) {
         try {
-            const {totalParticipants, individualParticipants, groupParticipants, totalCountries} = req.body;
+            const {individualParticipants, groupParticipants, averageGroupSize} = req.body;
 
             const storedSummary = await summary.findOne();
-            if (!storedSummary) {
-                //  writting summary into a clean database
-                await new summary({
-                    groupParticipants: groupParticipants || 0,
-                    totalCountries: totalCountries || 0,
-                    totalParticipants: totalParticipants || 0,
-                    individualParticipants: individualParticipants || 0,
-                }).save();
 
-                res.status(200).json({ message: "New summary written" });
-                return;
+            // If the write summary request is from team, then the request body would has individualParticipants attribute
+            // is individual sheet request
+            if (individualParticipants) {
+                storedSummary!.individualParticipants = individualParticipants;
+            } else {
+                storedSummary!.groupParticipants = groupParticipants;
+                storedSummary!.averageGroupSize = averageGroupSize;
             }
 
-            storedSummary.groupParticipants = groupParticipants ? groupParticipants : storedSummary.groupParticipants;
-            storedSummary.totalCountries = totalCountries ? totalCountries : storedSummary.totalCountries;
-            storedSummary.totalParticipants = totalParticipants ? totalParticipants : storedSummary.totalParticipants;
-            storedSummary.individualParticipants = individualParticipants ? individualParticipants : storedSummary.individualParticipants;
-
             // save updated summary
-            await storedSummary.save();
-
+            await storedSummary!.save();
+            
             res.status(200)
                 .json({
                     message: "success",
@@ -77,29 +80,6 @@ export class SummaryController {
             });
         }
     }
-
-
-    static async getTotalParticipants (_: Request, res: Response) {
-        try {
-            const storedSummary = await summary.findOne();
-            if (!storedSummary) {
-                res.status(400).json({ message: "Participants not found!" });
-                return;
-            }
-
-            res.status(200)
-                .json({
-                    message: "success",
-                    data: storedSummary.totalParticipants,
-                });
-        }
-        catch (error) {
-            res.status(500).json({
-                "message": "Some thing went wrong!"
-            });
-        }
-    }
-
 
     static async getIndividualsCount (_: Request, res: Response) {
         try {
@@ -147,16 +127,13 @@ export class SummaryController {
 
     static async getCountriesCount (_: Request, res: Response) {
         try {
-            const storedSummary = await summary.findOne();
-            if (!storedSummary) {
-                res.status(400).json({ message: "Country count not found!" });
-                return;
-            }
+            // count the number of countries from country database
+            const countryCount = await country.countDocuments();
 
             res.status(200)
                 .json({
                     message: "success",
-                    data: storedSummary.totalCountries,
+                    data: countryCount,
                 });
         }
         catch (error) {

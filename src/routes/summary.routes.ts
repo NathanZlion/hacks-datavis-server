@@ -14,10 +14,8 @@ summaryRouter.post("/", authMiddleware, SummaryController.writeSummary);
 
 summaryRouter.get("/", SummaryController.getSummary);
 
-summaryRouter.get("/total_participants", SummaryController.getTotalParticipants);
 summaryRouter.get("/individuals", SummaryController.getIndividualsCount);
 summaryRouter.get("/groups", SummaryController.getGroupsCount);
-summaryRouter.get("/countries", SummaryController.getCountriesCount);
 summaryRouter.get("/", SummaryController.getSummary);
 
 export default summaryRouter;
