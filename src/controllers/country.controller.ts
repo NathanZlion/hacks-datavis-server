@@ -38,18 +38,17 @@ export class countryController {
             // await country.deleteMany();
 
             countriesStat.forEach(async (countryStat) => {
-                // await new country(countryStat).save();
 
                 // check if the country already exists
                 const countryExists = await country.findOne({ countryName: countryStat.countryName }) as any;
 
                 if (!countryExists) {
-                    console.log("Here I am, creating a new country!" + countryStat.countryName );
                     await new country(countryStat).save();
                     return;
                 }
 
-                // check if this overwrite is from individual registration or not.
+                // check if this overwrite is from individual registration or not, in order not to make
+                // individual tracker sheet overwrite data for group tracker sheet and vice versa.
                 await countryExists.save();
                 if (countryStat.numberOfIndividualParticipants) {
                     countryExists.numberOfIndividualParticipants = countryStat.numberOfIndividualParticipants;
