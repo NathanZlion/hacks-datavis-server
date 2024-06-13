@@ -1,9 +1,11 @@
 import { Request, Response } from 'express';
 import reachoutSource from '../models/reachoutSource.model';
+import { isIn } from 'validator';
 
 interface reachoutSourceInterface {
     reachoutSourceName: string;
-    numberOfParticipants: number;
+    numberOfIndividualParticipants: number,
+    numberOfGroupParticipants: number,
 }
 
 export class ReachoutSourceController {
@@ -28,17 +30,36 @@ export class ReachoutSourceController {
     
     static async overwriteReachoutSourceStat (req: Request, res: Response) {
         try {
-            const reachoutSourceStat = req.body.data as reachoutSourceInterface[] || null;
-            await reachoutSource.deleteMany();
+            const reachoutSourceStat = req.body.data as reachoutSourceInterface[];
 
-            reachoutSourceStat.forEach(async (countryStat) => {
-                await new reachoutSource(countryStat).save();
+            // the request is coming from an individual registration google sheet
+            reachoutSourceStat.forEach(async (reachoutStat) => {
+                // individual registration
+                if (isIn("numberOfIndividualParticipants", Object.keys(reachoutStat))) {
+                    console.log(reachoutStat)
+                    const reachoutSourceStat = await reachoutSource.findOne({ reachoutSourceName: reachoutStat.reachoutSourceName });
+                    if (reachoutSourceStat) {
+                        reachoutSourceStat.numberOfIndividualParticipants = reachoutStat.numberOfIndividualParticipants;
+                        reachoutSourceStat.save();
+                    } else {
+                        new reachoutSource(reachoutStat).save();
+                    }
+                } else {
+                    const reachoutSourceStat = await reachoutSource.findOne({ reachoutSourceName: reachoutStat.reachoutSourceName });
+                    console.log(reachoutStat);
+                    if (reachoutSourceStat) {
+                        reachoutSourceStat.numberOfGroupParticipants = reachoutStat.numberOfGroupParticipants;
+                        reachoutSourceStat.save();
+                    } else {
+                        new reachoutSource(reachoutStat).save();
+                    }
+                }
             });
 
             res.status(200)
                 .json({
                     status: "success",
-                    message: "Successfully over written reachout sources stat!",
+                    message: "Successfully overwritten reachout sources stat!",
                 });
         }
         catch (error) {
