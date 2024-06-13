@@ -29,7 +29,7 @@ export class participantControllers {
             await participantControllers.increaseCountrySourceCount(countryName, 1, true);
     
             // update the reachoutSource
-            await participantControllers.addOnereachoutSource(reachoutSource);
+            await participantControllers.addOnereachoutSource(reachoutSource, 1, true);
 
             return res.status(200).json({
                 status: "success",
@@ -50,7 +50,7 @@ export class participantControllers {
             await participantControllers.increaseCountrySourceCount(countryName, groupSize, false);
     
             // update the reachoutSource
-            await participantControllers.addOnereachoutSource(reachoutsource, groupSize);
+            await participantControllers.addOnereachoutSource(reachoutsource, groupSize, false);
 
             return res.status(200).json({
                 status: "success",
@@ -86,7 +86,7 @@ export class participantControllers {
         return;
     }
     
-    static async addOnereachoutSource(reachoutSourceName: string, increment: number = 1) {
+    static async addOnereachoutSource(reachoutSourceName: string, increment: number = 1, individual: boolean = true) {
         // find the reachout source
         const existingReachoutSource = await reachoutSource.findOne({ reachoutSourceName: reachoutSourceName });
 
@@ -97,7 +97,11 @@ export class participantControllers {
         }
 
         // update the reachout source count
-        existingReachoutSource.numberOfParticipants += increment;
+        if (individual) {
+            existingReachoutSource.numberOfIndividualParticipants += increment;
+        } else {
+            existingReachoutSource.numberOfGroupParticipants += increment;
+        }
 
         // save the updated reachout source 
         await existingReachoutSource.save();
