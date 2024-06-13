@@ -1,11 +1,12 @@
 import country from "../models/country.model";
 import reachoutSource from "../models/reachoutSource.model";
 import { Request, Response } from "express";
+import summary from "../models/summary.model";
 
 
 interface groupRegistrationInterface {
     countryName: string;
-    reachoutsource: string;
+    reachoutSource: string;
     groupSize: number;
 }
 
@@ -17,7 +18,7 @@ interface individualRegistrationInterface {
 
 /**
  * 
- * A class to handle all user related controllers 
+ * A class to handle all new user registration related controllers 
  */
 export class participantControllers {
 
@@ -25,11 +26,14 @@ export class participantControllers {
         try {
             const { countryName, reachoutSource } = req.body as individualRegistrationInterface;
     
+            // incremenet individual participants count by one
+            await participantControllers._incrementIndividualParticipantsCount();
+
             // update country and reachoutSource
-            await participantControllers.increaseCountrySourceCount(countryName, 1, true);
+            await participantControllers._increaseCountrySourceCount(countryName, 1, true);
     
             // update the reachoutSource
-            await participantControllers.addOnereachoutSource(reachoutSource, 1, true);
+            await participantControllers._incrementreachoutSourceCount(reachoutSource, 1, true);
 
             return res.status(200).json({
                 status: "success",
@@ -44,13 +48,16 @@ export class participantControllers {
 
     static async newGroupRegistration(req: Request, res: Response) {
         try {
-            const { countryName, reachoutsource, groupSize } = req.body as groupRegistrationInterface;
+            const { countryName, reachoutSource, groupSize } = req.body as groupRegistrationInterface;
+
+            // increment group participants count by one
+            await participantControllers._incrementGroupParticipantsCount(groupSize);
 
             // update country and reachoutSource
-            await participantControllers.increaseCountrySourceCount(countryName, groupSize, false);
-    
+            await participantControllers._increaseCountrySourceCount(countryName, groupSize, false);
+
             // update the reachoutSource
-            await participantControllers.addOnereachoutSource(reachoutsource, groupSize, false);
+            await participantControllers._incrementreachoutSourceCount(reachoutSource, groupSize, false);
 
             return res.status(200).json({
                 status: "success",
@@ -63,7 +70,7 @@ export class participantControllers {
         }
     }
     
-    static async increaseCountrySourceCount(countryName: string, increment: number = 1, individual: boolean = true) {
+    static async _increaseCountrySourceCount(countryName: string, increment: number = 1, individual: boolean = true) {
         // find the country
         const existingCountry = await country.findOne({ countryName: countryName });
 
@@ -86,7 +93,7 @@ export class participantControllers {
         return;
     }
     
-    static async addOnereachoutSource(reachoutSourceName: string, increment: number = 1, individual: boolean = true) {
+    static async _incrementreachoutSourceCount(reachoutSourceName: string, increment: number = 1, individual: boolean = true) {
         // find the reachout source
         const existingReachoutSource = await reachoutSource.findOne({ reachoutSourceName: reachoutSourceName });
 
@@ -106,6 +113,26 @@ export class participantControllers {
         // save the updated reachout source 
         await existingReachoutSource.save();
 
+        return;
+    }
+
+    static async _incrementIndividualParticipantsCount () {
+        const _summary = await summary.findOne();
+        _summary!.individualParticipants++;
+
+        await _summary!.save();
+        return;
+    }
+
+    static async _incrementGroupParticipantsCount (groupSize: number) {
+        const _summary = await summary.findOne();
+        const originalGroupParticipants = _summary!.groupParticipants;
+        const numberOfParticipants =_summary!.groupParticipants * _summary!.averageGroupSize;
+
+        _summary!.averageGroupSize = (numberOfParticipants + groupSize) / (originalGroupParticipants + 1);
+        _summary!.groupParticipants++;
+
+        await _summary!.save();
         return;
     }
 }
