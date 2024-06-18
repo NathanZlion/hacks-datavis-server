@@ -2,17 +2,20 @@ import country from "../models/country.model";
 import reachoutSource from "../models/reachoutSource.model";
 import { Request, Response } from "express";
 import summary from "../models/summary.model";
+import { prevParticipationControllers } from "./prevParticipation.controller";
 
 
 interface groupRegistrationInterface {
     countryName: string;
     reachoutSource: string;
     groupSize: number;
+    prevParticipation: boolean;
 }
 
 interface individualRegistrationInterface {
     countryName: string;
     reachoutSource: string;
+    prevParticpation: boolean;
 }
 
 
@@ -24,7 +27,7 @@ export class participantControllers {
 
     static async newIndividualRegistration(req: Request, res: Response) {
         try {
-            const { countryName, reachoutSource } = req.body as individualRegistrationInterface;
+            const { countryName, reachoutSource, prevParticpation } = req.body as individualRegistrationInterface;
     
             // incremenet individual participants count by one
             await participantControllers._incrementIndividualParticipantsCount();
@@ -34,6 +37,10 @@ export class participantControllers {
     
             // update the reachoutSource
             await participantControllers._incrementreachoutSourceCount(reachoutSource, 1, true);
+
+            // update individual prev participaiton by one
+            await prevParticipationControllers._addIndividualPrevParticipation(prevParticpation);
+            console.log(prevParticpation);
 
             return res.status(200).json({
                 status: "success",
@@ -48,7 +55,7 @@ export class participantControllers {
 
     static async newGroupRegistration(req: Request, res: Response) {
         try {
-            const { countryName, reachoutSource, groupSize } = req.body as groupRegistrationInterface;
+            const { countryName, reachoutSource, groupSize, prevParticipation } = req.body as groupRegistrationInterface;
 
             // increment group participants count by one
             await participantControllers._incrementGroupParticipantsCount(groupSize);
@@ -58,6 +65,10 @@ export class participantControllers {
 
             // update the reachoutSource
             await participantControllers._incrementreachoutSourceCount(reachoutSource, groupSize, false);
+
+            // update prev participation count by one
+            await prevParticipationControllers._addGroupPrevParticipation(prevParticipation);
+            console.log(prevParticipation);
 
             return res.status(200).json({
                 status: "success",

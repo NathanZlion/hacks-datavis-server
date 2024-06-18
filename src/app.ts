@@ -10,6 +10,7 @@ import participantRouter from "./routes/participant.routes";
 import reachoutRouter from "./routes/reachout.routes";
 import countryRouter from "./routes/country.routes";
 import summaryRouter from "./routes/summary.routes";
+import prevParticipationRouter from "./routes/prevParticipation.router";
 
 configDotenv();
 
@@ -43,6 +44,7 @@ app.use(base_api+"/participant", participantRouter);
 app.use(base_api+"/reachout", reachoutRouter);
 app.use(base_api+"/summary", summaryRouter);
 app.use(base_api+"/country", countryRouter);
+app.use(base_api+"/prevparticipation", prevParticipationRouter);
 
 // any origin can access this server
 app.use(cors({
