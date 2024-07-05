@@ -11,6 +11,7 @@ import reachoutRouter from "./routes/reachout.routes";
 import countryRouter from "./routes/country.routes";
 import summaryRouter from "./routes/summary.routes";
 import prevParticipationRouter from "./routes/prevParticipation.router";
+import timeseriesRouter from "./routes/registrationTimeseries-routes";
 
 configDotenv();
 
@@ -45,6 +46,7 @@ app.use(base_api+"/reachout", reachoutRouter);
 app.use(base_api+"/summary", summaryRouter);
 app.use(base_api+"/country", countryRouter);
 app.use(base_api+"/prevparticipation", prevParticipationRouter);
+app.use(base_api+"/timeseries", timeseriesRouter)
 
 // any origin can access this server
 app.use(cors({
