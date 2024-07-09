@@ -48,6 +48,7 @@ export class RegistrationTimeseriesController {
 
                 return res.status(200).json({
                     message: "success",
+                    data: { date: currentDate, individual, group, groupCount },
                 });
             }
 
@@ -72,14 +73,16 @@ export class RegistrationTimeseriesController {
     static async updatesAllRegistrationTimeseriesData(req: Request, res: Response) {
         try {
             const dataList = req.body.data as RegistrationTimeseriesData[];
+            console.log(dataList)
 
             if (!dataList || dataList.length === 0) {
                 return res.status(400).json({ message: "No data provided" });
             }
 
+            const isIndividual = req.path.includes("individual");
             for (const data of dataList) {
-                const isIndividual = req.path.includes("individual");
-                await RegistrationTimeseriesController.updateData(data.date, data, isIndividual);
+                console.log(data);
+                await RegistrationTimeseriesController.updateData(data, isIndividual);
             }
 
             return res.status(201).json({ message: "All registration timeseries data updated successfully" });
@@ -91,17 +94,17 @@ export class RegistrationTimeseriesController {
         }
     }
 
-    private static async updateData(date: Date, data: RegistrationTimeseriesData, isIndividual: boolean) {
-        const existingData = await registrationtimeseries.findOne({ date });
-    
+    private static async updateData(data: RegistrationTimeseriesData, isIndividual: boolean) {
+        const existingData = await registrationtimeseries.findOne({ date: data.date });
+
         if (existingData) {
             const updateData = isIndividual ? { individual: data.individual } : { group: data.group, groupCount: data.groupCount };
-            await registrationtimeseries.updateOne({ date }, { $set: updateData });
+            await registrationtimeseries.updateOne({ date: data.date }, { $set: updateData });
         } else {
-          const newData = new registrationtimeseries({ ...data, date });
-          await newData.save();
+            const newData = new registrationtimeseries({ ...data });
+            await newData.save();
         }
-      }
+    }
 
     private static async validateDates(query: any) {
         var startDate = new Date(query.startDate as string);
@@ -118,7 +121,7 @@ export class RegistrationTimeseriesController {
     }
 
     private static getCleanedDate(date = new Date()) {
-        date.setHours(0, 0, 0, 0);
-        return date;
+        const cleanedDate = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+        return cleanedDate;
     }
 }
